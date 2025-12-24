@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>给XiuRong Yan的圣诞礼物 🎄</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #2c1810, #8b0000, #dc143c);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .title {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 2.5em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            text-align: center;
+            pointer-events: auto;
+            background: linear-gradient(45deg, #ffd700, #ffb347, #ff69b4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 5px rgba(255,215,0,0.5)); }
+            to { filter: drop-shadow(0 0 20px rgba(255,105,180,0.8)); }
+        }
+
+        .subtitle {
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 1.2em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            text-align: center;
+            pointer-events: auto;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(15px);
+            padding: 20px 30px;
+            border-radius: 25px;
+            color: #fff;
+            font-size: 1em;
+            text-align: center;
+            pointer-events: auto;
+            border: 2px solid rgba(255,215,0,0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .gesture-indicator {
+            position: absolute;
+            top: 200px;
+            right: 50px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 15px;
+            color: #fff;
+            font-size: 1em;
+            pointer-events: auto;
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+
+        .photo-upload {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            pointer-events: auto;
+        }
+
+        .upload-btn {
+            background: linear-gradient(45deg, #ff69b4, #ffb347);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255,105,180,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,105,180,0.5);
+        }
+
+        .romantic-message {
+            position: absolute;
+            bottom: 150px;
+            left: 50px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            color: #fff;
+            font-size: 1.1em;
+            font-style: italic;
+            pointer-events: auto;
+            border: 1px solid rgba(255,215,0,0.2);
+            max-width: 300px;
+        }
+
+        .hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .heart {
+            position: absolute;
+            color: rgba(255,105,180,0.8);
+            font-size: 24px;
+            animation: floatHearts 8s infinite linear;
+        }
+
+        @keyframes floatHearts {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <div class="loading" id="loading">
+            <div>正在为你准备圣诞魔法... ✨</div>
+            <div style="margin-top: 10px; font-size: 0.8em;">请允许摄像头权限</div>
+        </div>
+        
+        <div id="ui-overlay" class="hidden">
+            <h1 class="title">给最美丽的XiuRong Yan 🎄</h1>
+            <p class="subtitle">愿我们的爱情如这圣诞树般永恒闪耀</p>
+            
+            <div class="gesture-indicator">
+                <div>当前手势: <span id="gesture-status">检测中...</span></div>
+                <div style="margin-top: 5px; font-size: 0.9em; opacity: 0.8;">
+                    🖐️ 张开手掌 - 散开模式<br>
+                    ✊ 握拳 - 合拢模式<br>
+                    🤏 捏合 - 放大照片
+                </div>
+            </div>
+            
+            <div class="photo-upload">
+                <input type="file" id="photo-input" accept="image/*" multiple style="display: none;">
+                <button class="upload-btn" onclick="document.getElementById('photo-input').click()">
+                    📸 上传我们的照片
+                </button>
+            </div>
+            
+            <div class="romantic-message">
+                "每一个粒子都代表着我对你的爱意<br>
+                每一张照片都是我们的美好回忆<br>
+                愿你在这个圣诞节感受到我满满的爱 💕"
+            </div>
+            
+            <div class="controls">
+                <div>🎮 手势控制说明</div>
+                <div style="margin-top: 10px; font-size: 0.9em;">
+                    张开手掌散开粒子 | 握拳聚合圣诞树 | 捏合手势查看照片
+                </div>
+                <div style="margin-top: 5px; font-size: 0.8em; opacity: 0.7;">
+                    鼠标也可操作：拖拽旋转 | 滚轮缩放 | H键隐藏UI
+                </div>
+            </div>
+        </div>
+        
+        <div class="hearts" id="hearts-container"></div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js';
+        import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/controls/OrbitControls.js';
+        
+        // 全局变量
+        let scene, camera, renderer, controls;
+        let treeParticles, photoParticles;
+        let particleSystem, photoSystem;
+        let currentState = 'gathered'; // gathered, scattered, photo
+        let targetState = 'gathered';
+        let gestureRecognizer;
+        let videoElement;
+        let animationId;
+        let photos = [];
+        let selectedPhoto = null;
+        let romanticTexts = [];
+        
+        // 手势状态
+        let handState = {
+            gesture: 'none',
+            rotation: { x: 0, y: 0 },
+            pinching: false,
+            handPosition: { x: 0, y: 0 }
+        };
+
+        // 初始化场景
+        async function init() {
+            // 创建场景
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x2c1810, 50, 200);
+            
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 20, 50);
+            
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x2c1810, 1);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // 创建控制器
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxDistance = 100;
+            controls.minDistance = 20;
+            
+            // 添加灯光
+            setupLights();
+            
+            // 创建粒子系统
+            await createParticleSystems();
+            
+            // 初始化MediaPipe手势识别
+            await initGestureRecognition();
+            
+            // 创建飘落的爱心
+            createFloatingHearts();
+            
+            // 隐藏加载界面
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('ui-overlay').classList.remove('hidden');
+            
+            // 开始动画循环
+            animate();
+        }
+
+        // 设置灯光
+        function setupLights() {
+            // 环境光
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+            scene.add(ambientLight);
+            
+            // 主光源
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            // 圣诞灯光效果
+            const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff69b4, 0x00ffff];
+            for (let i = 0; i < 20; i++) {
+                const pointLight = new THREE.PointLight(colors[i % colors.length], 0.6, 30);
+                const angle = (i / 20) * Math.PI * 2;
+                pointLight.position.set(
+                    Math.cos(angle) * 25,
+                    10 + Math.sin(i * 0.5) * 8,
+                    Math.sin(angle) * 25
+                );
+                scene.add(pointLight);
+            }
+        }
+
+        // 创建粒子系统
+        async function createParticleSystems() {
+            // 圣诞树粒子系统
+            const particleCount = 8000;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const sizes = new Float32Array(particleCount);
+            const velocities = new Float32Array(particleCount * 3);
+            
+            // 创建圣诞树形状
+            for (let i = 0; i < particleCount; i++) {
+                const i3 = i * 3;
+                
+                // 圣诞树形状算法
+                const y = Math.random() * 25 - 12.5;
+                const radius = Math.max(0.5, (12.5 - Math.abs(y)) * 0.6);
+                const angle = Math.random() * Math.PI * 2;
+                const r = Math.random() * radius;
+                
+                positions[i3] = Math.cos(angle) * r;
+                positions[i3 + 1] = y;
+                positions[i3 + 2] = Math.sin(angle) * r;
+                
+                // 圣诞色彩
+                const colorChoice = Math.random();
+                if (colorChoice < 0.6) {
+                    // 绿色
+                    colors[i3] = 0.1 + Math.random() * 0.3;
+                    colors[i3 + 1] = 0.6 + Math.random() * 0.4;
+                    colors[i3 + 2] = 0.1 + Math.random() * 0.3;
+                } else if (colorChoice < 0.8) {
+                    // 金色
+                    colors[i3] = 0.8 + Math.random() * 0.2;
+                    colors[i3 + 1] = 0.6 + Math.random() * 0.4;
+                    colors[i3 + 2] = 0.1 + Math.random() * 0.3;
+                } else {
+                    // 红色
+                    colors[i3] = 0.8 + Math.random() * 0.2;
+                    colors[i3 + 1] = 0.1 + Math.random() * 0.3;
+                    colors[i3 + 2] = 0.1 + Math.random() * 0.3;
+                }
+                
+                sizes[i] = Math.random() * 3 + 1;
+                
+                // 初始速度
+                velocities[i3] = (Math.random() - 0.5) * 0.02;
+                velocities[i3 + 1] = (Math.random() - 0.5) * 0.02;
+                velocities[i3 + 2] = (Math.random() - 0.5) * 0.02;
+            }
+            
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+            
+            // 创建材质
+            const material = new THREE.PointsMaterial({
+                size: 2,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+            
+            particleSystem = new THREE.Points(geometry, material);
+            scene.add(particleSystem);
+            
+            // 保存原始位置
+            particleSystem.userData.originalPositions = positions.slice();
+            particleSystem.userData.velocities = velocities.slice();
+        }
+
+        // 初始化手势识别
+        async function initGestureRecognition() {
+            try {
+                // 创建视频元素
+                videoElement = document.createElement('video');
+                videoElement.style.display = 'none';
+                document.body.appendChild(videoElement);
+                
+                // 获取摄像头权限
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480 }
+                });
+                videoElement.srcObject = stream;
+                videoElement.play();
+                
+                // 加载MediaPipe手势识别模型
+                const vision = await FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+                );
+                
+                gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: "https://storage.googleapis.com/mediapipe-tasks/gesture_recognizer/gesture_recognizer.task",
+                        delegate: "GPU"
+                    },
+                    numHands: 2,
+                    runningMode: "VIDEO"
+                });
+                
+                // 开始手势检测循环
+                detectGestures();
+                
+            } catch (error) {
+                console.warn('手势识别初始化失败，使用鼠标控制模式:', error);
+                // 如果手势识别失败，仍然可以使用鼠标控制
+            }
+        }
+
+        // 手势检测
+        function detectGestures() {
+            if (!gestureRecognizer || !videoElement) return;
+            
+            const detect = async () => {
+                if (videoElement.readyState >= 2) {
+                    try {
+                        const results = gestureRecognizer.recognizeForVideo(videoElement, Date.now());
+                        
+                        if (results.gestures && results.gestures.length > 0) {
+                            const gesture = results.gestures[0][0].categoryName;
+                            const landmarks = results.landmarks[0];
+                            
+                            updateHandState(gesture, landmarks);
+                        } else {
+                            handState.gesture = 'none';
+                        }
+                    } catch (error) {
+                        console.warn('手势检测错误:', error);
+                    }
+                }
+                
+                requestAnimationFrame(detect);
+            };
+            
+            detect();
+        }
+
+        // 更新手势状态
+        function updateHandState(gesture, landmarks) {
+            const previousGesture = handState.gesture;
+            handState.gesture = gesture;
+            
+            // 更新UI显示
+            updateGestureUI(gesture);
+            
+            // 根据手势更新状态
+            switch (gesture) {
+                case 'Open_Palm': // 张开手掌
+                    targetState = 'scattered';
+                    break;
+                case 'Closed_Fist': // 握拳
+                    targetState = 'gathered';
+                    break;
+                case 'Pinch': // 捏合
+                    if (!handState.pinching) {
+                        handState.pinching = true;
+                        selectRandomPhoto();
+                    }
+                    break;
+                default:
+                    handState.pinching = false;
+            }
+            
+            // 更新手部旋转
+            if (landmarks && landmarks.length > 0) {
+                const wrist = landmarks[0];
+                const middleFinger = landmarks[12];
+                
+                handState.rotation.x = (wrist.y - 0.5) * 2;
+                handState.rotation.y = (wrist.x - 0.5) * 2;
+                handState.handPosition.x = wrist.x;
+                handState.handPosition.y = wrist.y;
+                
+                // 在散开状态下，用手控制相机旋转
+                if (currentState === 'scattered') {
+                    const rotationSpeed = 0.02;
+                    controls.autoRotate = false;
+                    camera.position.x = Math.sin(handState.rotation.y * Math.PI) * 50;
+                    camera.position.z = Math.cos(handState.rotation.y * Math.PI) * 50;
+                    camera.position.y = 20 + handState.rotation.x * 20;
+                    camera.lookAt(0, 0, 0);
+                }
+            }
+        }
+
+        // 更新手势UI
+        function updateGestureUI(gesture) {
+            const statusElement = document.getElementById('gesture-status');
+            const gestureNames = {
+                'Open_Palm': '🖐️ 张开手掌',
+                'Closed_Fist': '✊ 握拳',
+                'Pinch': '🤏 捏合',
+                'none': '❌ 无检测'
+            };
+            statusElement.textContent = gestureNames[gesture] || gesture;
+        }
+
+        // 选择随机照片
+        function selectRandomPhoto() {
+            if (photos.length > 0) {
+                selectedPhoto = photos[Math.floor(Math.random() * photos.length)];
+                targetState = 'photo';
+                setTimeout(() => {
+                    targetState = currentState;
+                }, 3000);
+            }
+        }
+
+        // 创建飘落的爱心
+        function createFloatingHearts() {
+            const heartsContainer = document.getElementById('hearts-container');
+            
+            setInterval(() => {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.textContent = '💖';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDuration = (Math.random() * 3 + 5) + 's';
+                heart.style.fontSize = (Math.random() * 10 + 20) + 'px';
+                
+                heartsContainer.appendChild(heart);
+                
+                setTimeout(() => {
+                    heart.remove();
+                }, 8000);
+            }, 2000);
+        }
+
+        // 动画循环
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            // 更新粒子状态
+            updateParticles();
+            
+            // 更新控制器
+            controls.update();
+            
+            // 渲染场景
+            renderer.render(scene, camera);
+        }
+
+        // 更新粒子系统
+        function updateParticles() {
+            if (!particleSystem) return;
+            
+            const positions = particleSystem.geometry.attributes.position.array;
+            const originalPositions = particleSystem.userData.originalPositions;
+            const velocities = particleSystem.userData.velocities;
+            const time = Date.now() * 0.001;
+            
+            // 状态转换动画
+            const lerpFactor = 0.02;
+            
+            for (let i = 0; i < positions.length; i += 3) {
+                let targetX, targetY, targetZ;
+                
+                if (targetState === 'scattered') {
+                    // 散开状态 - 星云效果
+                    const angle = time * 0.5 + i * 0.01;
+                    const radius = 30 + Math.sin(time + i * 0.1) * 10;
+                    targetX = Math.cos(angle) * radius;
+                    targetY = Math.sin(time + i * 0.05) * 15;
+                    targetZ = Math.sin(angle) * radius;
+                } else if (targetState === 'photo' && selectedPhoto) {
+                    // 照片展示状态
+                    targetX = originalPositions[i] + (Math.random() - 0.5) * 5;
+                    targetY = originalPositions[i + 1] + 10;
+                    targetZ = originalPositions[i + 2] + (Math.random() - 0.5) * 5;
+                } else {
+                    // 聚合状态 - 圣诞树
+                    targetX = originalPositions[i];
+                    targetY = originalPositions[i + 1];
+                    targetZ = originalPositions[i + 2];
+                }
+                
+                // 平滑插值
+                positions[i] += (targetX - positions[i]) * lerpFactor;
+                positions[i + 1] += (targetY - positions[i + 1]) * lerpFactor;
+                positions[i + 2] += (targetZ - positions[i + 2]) * lerpFactor;
+                
+                // 添加轻微的呼吸效果
+                positions[i + 1] += Math.sin(time * 2 + i * 0.1) * 0.1;
+            }
+            
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+            currentState = targetState;
+        }
+
+        // 窗口大小调整
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // 处理照片上传
+        function handlePhotoUpload(event) {
+            const files = event.target.files;
+            if (!files) return;
+            
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    photos.push(e.target.result);
+                    // 这里可以添加将照片转换为3D粒子的逻辑
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 键盘事件处理
+        function onKeyPress(event) {
+            switch(event.key.toLowerCase()) {
+                case 'h':
+                    document.getElementById('ui-overlay').classList.toggle('hidden');
+                    break;
+                case ' ':
+                    targetState = targetState === 'scattered' ? 'gathered' : 'scattered';
+                    break;
+            }
+        }
+
+        // 错误处理
+        window.addEventListener('error', function(event) {
+            console.error('发生错误:', event.error);
+            document.getElementById('loading').innerHTML = 
+                '<div>加载遇到问题，请刷新页面重试 😢</div>' +
+                '<div style="margin-top: 10px; font-size: 0.8em;">请确保浏览器支持WebGL和摄像头</div>';
+        });
+
+        // 事件监听器
+        window.addEventListener('resize', onWindowResize);
+        document.getElementById('photo-input').addEventListener('change', handlePhotoUpload);
+        document.addEventListener('keydown', onKeyPress);
+        
+        // 加载必要的库
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.textContent = `
+            import { FilesetResolver } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest';
+            window.FilesetResolver = FilesetResolver;
+        `;
+        document.head.appendChild(script);
+        
+        // 初始化应用
+        window.addEventListener('load', init);
+        
+        // 添加一些浪漫的文字
+        const romanticQuotes = [
+            "爱是圣诞节的真谛，而你是我生命中最美的礼物",
+            "每一个粒子都在诉说着我对你的思念",
+            "愿我们的爱情如圣诞树般长青不败",
+            "在这个特别的日子里，只想牵着你的手看雪落",
+            "你是我心中最亮的星，照亮我所有的圣诞夜"
+        ];
+        
+        // 定期更新浪漫文字
+        setInterval(() => {
+            const messageElement = document.querySelector('.romantic-message');
+            const randomQuote = romanticQuotes[Math.floor(Math.random() * romanticQuotes.length)];
+            messageElement.innerHTML = `"${randomQuote}"<br><br>"愿这个圣诞节，我们的爱永恒闪耀 💕"`;
+        }, 10000);
+    </script>
+</body>
+</html>
